@@ -1,0 +1,351 @@
+On the DNS server:
+First root 
+[root@ip-172-31-7-184 fedora]# telnet www.yahoo.com 80
+Trying 98.139.180.149...
+Connected to www.yahoo.com.
+Escape character is '^]'.
+GET / HTTP/1.1
+Host: www.yahoo.com
+Connection closed by foreign host.
+[root@ip-172-31-7-184 fedora]# 
+
+
+Second, the root of the server:
+Save a file serverP1.pcap: then I will view dns traffic. I did not include port 22 or ssh.
+
+[root@ip-172-31-7-184 part2]# tcpdump -Xvnw serverP1.pcap port not 22
+tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
+14 packets captured
+14 packets received by filter
+0 packets dropped by kernel
+
+
+This below line gives more information about the IP header:
+23:25:44.749050 IP (tos 0x0, ttl 64, id 43073, offset 0, flags [none], proto UDP (17), length 79)
+
+The DNS request for an A record, and the question mark after the A record that means a request.
+DNS request:
+172.31.7.184.44650 > 68.142.254.15.domain: 53567 [1au] A? fd-fp3.wg1.b.yahoo.com. (51)
+
+53567 is the ID of the packet in the DNS and it matches in the DNS request and the DNS reply 
+If there were attackers that could relay to match the ID request and ID response, 
+they could spy on communication between two parties.
+
+DNS response or reply:
+68.142.254.15.domain > 172.31.7.184.44650: 53567*- 2/0/1 fd-fp3.wg1.b.yahoo.com. A 98.139.180.149, fd-fp3.wg1.b.yahoo.com. A 98.139.183.24 (83)
+
+2/0/1  means the records in the response, there is 2 answers of records, /0/ there is no name server records
+in response, and there is 1 additional record.
+Each one of these records of response is yahoo IP addresses 98.139.183.24 and 98.139.180.149
+These are how I refer to yahoo
+yahoo returnes more than one IP address because it uses different systems to keep up.
+
+check nslookup yahoo.com to see if I am really connect to one of yahoo IP network addresses
+
+[ec2-user@ip-172-31-4-22 ~]$ nslookup yahoo.com
+Server:		172.31.7.184
+Address:	172.31.7.184#53
+
+Non-authoritative answer:
+Name:	yahoo.com
+Address: 98.139.183.24
+Name:	yahoo.com
+Address: 206.190.36.45
+Name:	yahoo.com
+Address: 98.138.253.109
+
+fd-fp3.wg1.b.yahoo.com, this domain is to resolve the following Ip addresses
+
+[root@ip-172-31-7-184 part2]# nslookup fd-fp3.wg1.b.yahoo.com.
+Server:		172.31.7.184
+Address:	172.31.7.184#53
+
+Non-authoritative answer:
+Name:	fd-fp3.wg1.b.yahoo.com
+Address: 98.139.183.24
+Name:	fd-fp3.wg1.b.yahoo.com
+Address: 98.139.180.149
+
+[root@ip-172-31-7-184 part2]# 
+
+
+
+
+[ec2-user@ip-172-31-4-22 ~]$ 
+
+fd-fp3.wg1.b.yahoo.com. is the domain. 
+
+
+(51) is the DNS length packet
+
+
+
+Using -X option, it shows more information in hex
+0x0000:  4500 004f a841 0000 4011 dbe7 ac1f 07b8
+0x0010:  448e fe0f
+4*5 =20 bytes in the IP header which is the minimum size of the header
+
+The UDP header:
+ae6a 0035 003b f6c1
+
+ae6a is the source port
+[root@ip-172-31-7-184 part2]# printf "%d\n" 0xae6a
+44650
+44650 matches the source port on the server 172.31.7.184.44650
+
+0035 is the destination port
+[root@ip-172-31-7-184 part2]# printf "%d\n" 0x0035
+53
+53 matches the destination port on the server 68.142.254.15
+
+003b is the UDP length header
+[root@ip-172-31-7-184 part2]# printf "%d\n" 0x003b
+59
+
+if we add UDP data 51 bytes + 8 bytes of UDP header = 59 bytes of length 
+And 59 - 79 length of IP = 20 bytes which was mentioned to the IP header.  
+
+
+f6c1 is the checksum of the header to check for errors
+
+Then the DNS information.
+
+
+
+[root@ip-172-31-7-184 part2]# tcpdump -c 4 -Xnvr serverP1.pcap 
+reading from file serverP1.pcap, link-type EN10MB (Ethernet)
+23:25:44.749050 IP (tos 0x0, ttl 64, id 43073, offset 0, flags [none], proto UDP (17), length 79)
+    172.31.7.184.44650 > 68.142.254.15.domain: 53567 [1au] A? fd-fp3.wg1.b.yahoo.com. (51)
+	0x0000:  4500 004f a841 0000 4011 dbe7 ac1f 07b8  E..O.A..@.......
+	0x0010:  448e fe0f ae6a 0035 003b f6c1 d13f 0000  D....j.5.;...?..
+	0x0020:  0001 0000 0000 0001 0666 642d 6670 3303  .........fd-fp3.
+	0x0030:  7767 3101 6205 7961 686f 6f03 636f 6d00  wg1.b.yahoo.com.
+	0x0040:  0001 0001 0000 2910 0000 0080 0000 00    ......)........
+23:25:44.749425 IP (tos 0x0, ttl 64, id 43074, offset 0, flags [none], proto UDP (17), length 79)
+    172.31.7.184.47622 > 68.142.254.15.domain: 27433 [1au] AAAA? fd-fp3.wg1.b.yahoo.com. (51)
+	0x0000:  4500 004f a842 0000 4011 dbe6 ac1f 07b8  E..O.B..@.......
+	0x0010:  448e fe0f ba06 0035 003b f6c1 6b29 0000  D......5.;..k)..
+	0x0020:  0001 0000 0000 0001 0666 642d 6670 3303  .........fd-fp3.
+	0x0030:  7767 3101 6205 7961 686f 6f03 636f 6d00  wg1.b.yahoo.com.
+	0x0040:  001c 0001 0000 2910 0000 0080 0000 00    ......)........
+23:25:44.756100 IP (tos 0x0, ttl 49, id 0, offset 0, flags [DF], proto UDP (17), length 111)
+    68.142.254.15.domain > 172.31.7.184.44650: 53567*- 2/0/1 fd-fp3.wg1.b.yahoo.com. A 98.139.180.149, fd-fp3.wg1.b.yahoo.com. A 98.139.183.24 (83)
+	0x0000:  4500 006f 0000 4000 3111 5309 448e fe0f  E..o..@.1.S.D...
+	0x0010:  ac1f 07b8 0035 ae6a 005b 6a3a d13f 8400  .....5.j.[j:.?..
+	0x0020:  0001 0002 0000 0001 0666 642d 6670 3303  .........fd-fp3.
+	0x0030:  7767 3101 6205 7961 686f 6f03 636f 6d00  wg1.b.yahoo.com.
+	0x0040:  0001 0001 c00c 0001 0001 0000 003c 0004  .............<..
+	0x0050:  628b b495 c00c 0001 0001 0000 003c 0004  b............<..
+	0x0060:  628b b718 0000 2906 9000 0080 0000 00    b.....)........
+23:25:44.756449 IP (tos 0x0, ttl 49, id 0, offset 0, flags [DF], proto UDP (17), length 107)
+    68.142.254.15.domain > 172.31.7.184.47622: 27433*- 1/0/1 fd-fp3.wg1.b.yahoo.com. AAAA 2001:4998:58:c02::a9 (79)
+	0x0000:  4500 006b 0000 4000 3111 530d 448e fe0f  E..k..@.1.S.D...
+	0x0010:  ac1f 07b8 0035 ba06 0057 3ef3 6b29 8400  .....5...W>.k)..
+	0x0020:  0001 0001 0000 0001 0666 642d 6670 3303  .........fd-fp3.
+	0x0030:  7767 3101 6205 7961 686f 6f03 636f 6d00  wg1.b.yahoo.com.
+	0x0040:  001c 0001 c00c 001c 0001 0000 003c 0010  .............<..
+	0x0050:  2001 4998 0058 0c02 0000 0000 0000 00a9  ..I..X..........
+	0x0060:  0000 2906 9000 0080 0000 00              ..)........
+
+
+tcpdump by one of Yahoo's authoritative DNS servers: 
+I used the DNS of Yahoo as a source 
+
+[root@ip-172-31-7-184 part2]# tcpdump -r serverP1.pcap port 53 and src host yf1.yahoo.com
+reading from file serverP1.pcap, link-type EN10MB (Ethernet)
+23:25:44.756100 IP yf1.yahoo.com.domain > ip-172-31-7-184.ec2.internal.44650: 53567*- 2/0/1 A 98.139.180.149, A 98.139.183.24 (83)
+23:25:44.756449 IP yf1.yahoo.com.domain > ip-172-31-7-184.ec2.internal.47622: 27433*- 1/0/1 AAAA 2001:4998:58:c02::a9 (79)
+[root@ip-172-31-7-184 part2]# 
+
+
+
+
+
+
+
+Three way of TCP Handshake:
+First the source sends SYN, second the destination answers SYN and ACK, and third the source
+sends ACK.
+
+[root@ip-172-31-7-184 part2]# tcpdump -nr serverP1.pcap -S port http -c 6
+reading from file serverP1.pcap, link-type EN10MB (Ethernet)
+23:25:44.757454 IP 172.31.7.184.34354 > 98.139.180.149.http: Flags [S], seq 2051456194, win 29200, options [mss 1460,sackOK,TS val 871046765 ecr 0,nop,wscale 7], length 0
+23:25:44.774435 IP 98.139.180.149.http > 172.31.7.184.34354: Flags [S.], seq 2837256947, ack 2051456195, win 8192, options [mss 1460,nop,nop,sackOK,nop,wscale 8], length 0
+23:25:44.774461 IP 172.31.7.184.34354 > 98.139.180.149.http: Flags [.], ack 2837256948, win 229, length 0
+23:25:46.196822 IP 172.31.7.184.34354 > 98.139.180.149.http: Flags [P.], seq 2051456195:2051456211, ack 2837256948, win 229, length 16: HTTP: GET / HTTP/1.1
+23:25:46.213979 IP 98.139.180.149.http > 172.31.7.184.34354: Flags [.], ack 2051456211, win 58, length 0
+23:25:51.298538 IP 172.31.7.184.34354 > 98.139.180.149.http: Flags [P.], seq 2051456211:2051456232, ack 2837256948, win 229, length 21: HTTP
+[root@ip-172-31-7-184 part2]# 
+
+
+I have two SYNs one form my server and another is from the destination.
+My server's IP address (172.31.7.184) opened a logical port 34354 and sent data to 98.139.180.149 
+and my server sent to protocol http.
+The Flags [S], seq 2051456194 ask to synchronize bit to starting a network connection, the 
+initial sequence numbering will start to the destination though http.
+Then the destination respond to the source's IP address (172.31.7.184 with the same port 
+(34354) of the source. The Flags [S.], seq 2837256947, ack 2051456195. The destination
+acknowledges with a dot with the flag field the synchronize that the source sent. we can also 
+see the acknowledging number ack 2051456195. Thus the synchronization was happened in both detraction.
+Then the final part of the three handshake is the source that sent a TCP segment to the 
+destination through http server on port 80. The Flags [.], ack 2837256948 to acknowledge 
+the synchronization the http server that was going to communicate with the source (my server) 
+
+the synchronization establishes the initial sequence numbers:
+from the source seq is 2051456194
+when the destination responded the ack is equal to the seq plus one 
+Acknowledgement = Sender ISN + phantom byte
+ack 2051456195 = seq 2051456194 + 1
+
+Also the distention sent a seq number 2837256947 to the source, so my server received 
+a seq number 2837256947 with acknowledgement number from the distention. 
+Then my server sent ack 837256948 to the destination 
+Acknowledgement = Sender ISN + phantom byte
+2837256948 = 2837256947 + 1
+
+
+Also there are more TCP options. It sent to support the connection from the source and the
+destination. The TCP options show:
+The maximum size of segment [mss 1460].
+The acknowledgment scheme is accepted sackOK,
+The TS value is a timestamp that helps the sequence number when it sending large packet 
+TS val 871046765. 
+The ecr option is for a round trip time.
+The wscale 7 option is about the window scale field that increases the size of the receive window.
+
+After the handshake, I can see the connection that has length 16: HTTP: GET / HTTP/1.1
+and host length is 22
+
+Intersting how hackers or bad guys can use the synchronization establishment to spy on the system.
+Also the sender sent its length 0 and did not send byte. The phantom byte used to show that
+the sender receive the packet of SYN
+  
+Surprise me for each packet of handshake, the length is 0 during and it is not include the header.
+
+-----
+
+On the client host
+[root@ip-172-31-4-22 part2client]# telnet www.tumblr.com 80
+Trying 66.6.42.30...
+Connected to www.tumblr.com.
+Escape character is '^]'.
+GET / HTTP/1.0
+Connection closed by foreign host.
+[root@ip-172-31-4-22 part2client]# 
+
+
+On the client 
+[root@ip-172-31-4-22 part2client]# tcpdump -Xvnw oNclient.pcap port not 22
+tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
+18 packets captured
+19 packets received by filter
+0 packets dropped by kernel
+
+From the client to the server 
+It sent two requests of records A and AAAA that are to the IPv4 and IPv6 addresses spaces 
+in the zone file in DNS.
+The client used the same port 51861 when it sent the request of two records A and AAAA
+and the server used port 53
+
+[root@ip-172-31-4-22 part2client]# tcpdump -nr oNclient.pcap port 53 and src host 172.31.4.22 and dst host 172.31.7.184
+reading from file oNclient.pcap, link-type EN10MB (Ethernet)
+06:49:07.946731 IP 172.31.4.22.51861 > 172.31.7.184.domain: 43630+ A? www.tumblr.com. (32)
+06:49:07.946748 IP 172.31.4.22.51861 > 172.31.7.184.domain: 14867+ AAAA? www.tumblr.com. (32)
+
+More info: 
+
+[root@ip-172-31-4-22 part2client]# tcpdump -nXr oNclient.pcap port 53 and src host 172.31.4.22
+reading from file oNclient.pcap, link-type EN10MB (Ethernet)
+06:49:07.946731 IP 172.31.4.22.51861 > 172.31.7.184.domain: 43630+ A? www.tumblr.com. (32)
+	0x0000:  4500 003c 8b59 4000 ff11 8c4a ac1f 0416  E..<.Y@....J....
+	0x0010:  ac1f 07b8 ca95 0035 0028 6446 aa6e 0100  .......5.(dF.n..
+	0x0020:  0001 0000 0000 0000 0377 7777 0674 756d  .........www.tum
+	0x0030:  626c 7203 636f 6d00 0001 0001            blr.com.....
+06:49:07.946748 IP 172.31.4.22.51861 > 172.31.7.184.domain: 14867+ AAAA? www.tumblr.com. (32)
+	0x0000:  4500 003c 8b5a 4000 ff11 8c49 ac1f 0416  E..<.Z@....I....
+	0x0010:  ac1f 07b8 ca95 0035 0028 6446 3a13 0100  .......5.(dF:...
+	0x0020:  0001 0000 0000 0000 0377 7777 0674 756d  .........www.tum
+	0x0030:  626c 7203 636f 6d00 001c 0001            blr.com.....
+[root@ip-172-31-4-22 part2client]# printf "%d\n" 0xca95
+51861
+[root@ip-172-31-4-22 part2client]# printf "%d\n" 0x0035
+53
+
+
+Prints the traffic from the client or server:
+There is ARP protocol- Address Resolution Protocol 
+ARP reply back to the server's IP address 172.31.7.184 with its MAC address 0a:49:0e:52:b8:db
+
+[root@ip-172-31-4-22 part2client]# tcpdump -nr oNclient.pcap port 53 and src host 172.31.4.22 or src host 172.31.7.184
+reading from file oNclient.pcap, link-type EN10MB (Ethernet)
+06:49:07.946731 IP 172.31.4.22.51861 > 172.31.7.184.domain: 43630+ A? www.tumblr.com. (32)
+06:49:07.946748 IP 172.31.4.22.51861 > 172.31.7.184.domain: 14867+ AAAA? www.tumblr.com. (32)
+06:49:07.947990 IP 172.31.7.184.domain > 172.31.4.22.51861: 14867 0/1/0 (88)
+06:49:07.950139 IP 172.31.7.184.domain > 172.31.4.22.51861: 43630 2/10/11 A 66.6.43.30, A 66.6.42.30 (512)
+06:49:12.955790 ARP, Reply 172.31.7.184 is-at 0a:49:0e:52:b8:db, length 28
+
+shows the arp command
+[root@ip-172-31-4-22 part2client]# arp 
+Address                  HWtype  HWaddress           Flags Mask            Iface
+172.31.0.1               ether   0a:f5:dc:29:8c:b5   C                     eth0
+172.31.7.184             ether   0a:49:0e:52:b8:db   C                     eth0
+
+
+
+on the server
+[root@ip-172-31-7-184 part2]# tcpdump -Xvnw OnServerClient.pcap port not 22
+tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
+10 packets captured
+10 packets received by filter
+0 packets dropped by kernel
+
+
+[root@ip-172-31-7-184 part2]# tcpdump -nvr OnServerClient.pcap port 53
+reading from file OnServerClient.pcap, link-type EN10MB (Ethernet)
+06:49:16.102597 IP (tos 0x0, ttl 255, id 35673, offset 0, flags [DF], proto UDP (17), length 60)
+    172.31.4.22.51861 > 172.31.7.184.domain: 43630+ A? www.tumblr.com. (32)
+06:49:16.102685 IP (tos 0x0, ttl 255, id 35674, offset 0, flags [DF], proto UDP (17), length 60)
+    172.31.4.22.51861 > 172.31.7.184.domain: 14867+ AAAA? www.tumblr.com. (32)
+06:49:16.103134 IP (tos 0x0, ttl 64, id 43587, offset 0, flags [none], proto UDP (17), length 116)
+    172.31.7.184.domain > 172.31.4.22.51861: 14867 0/1/0 (88)
+06:49:16.103994 IP (tos 0x0, ttl 64, id 61034, offset 0, flags [none], proto UDP (17), length 71)
+    172.31.7.184.53402 > 208.78.71.3.domain: 6917 [1au] A? www.tumblr.com. (43)
+06:49:16.104792 IP (tos 0x8, ttl 51, id 8815, offset 0, flags [none], proto UDP (17), length 103)
+    208.78.71.3.domain > 172.31.7.184.53402: 6917*- 2/0/1 www.tumblr.com. A 66.6.42.30, www.tumblr.com. A 66.6.43.30 (75)
+06:49:16.105349 IP (tos 0x0, ttl 64, id 43589, offset 0, flags [none], proto UDP (17), length 540)
+    172.31.7.184.domain > 172.31.4.22.51861: 43630 2/10/11 www.tumblr.com. A 66.6.43.30, www.tumblr.com. A 66.6.42.30 (512)
+[root@ip-172-31-7-184 part2]#
+
+The client sent two records A and AAAA but the server only used one record A of DNS.
+This is because the iptables filter the trafic when the internal network is used.
+That is nice I can see how traffic can be controlled by these tools in the real examples.
+
+
+[root@ip-172-31-7-184 part2]# nslookup ns3.p03.dynect.net
+Server:		172.31.7.184
+Address:	172.31.7.184#53
+
+Non-authoritative answer:
+Name:	ns3.p03.dynect.net
+Address: 208.78.71.3
+
+tcpdump by one of Tumblr's DNS servers: 
+Using Tumblr's DNS as source 
+
+[root@ip-172-31-7-184 part2]# tcpdump -nr OnServerClient.pcap port 53 and src host ns3.p03.dynect.net
+reading from file OnServerClient.pcap, link-type EN10MB (Ethernet)
+06:49:16.104792 IP 208.78.71.3.domain > 172.31.7.184.53402: 6917*- 2/0/1 A 66.6.42.30, A 66.6.43.30 (75)
+[root@ip-172-31-7-184 part2]# 
+
+The A record is mapping to IP addresses 66.6.42.30 and 66.6.43.30 
+
+
+
+I learned how to to monitor the network traffic. I really enjoyed working on these tools.
+It is a good learning tool when I watch the network trafic and protocol work. Also this homework
+made me thinking more about security. 
+I am wondering about if we increase the maximum length of the UDP protocol on the server system  
+I would like to see how the system or firewall will act. I do not know if that could affect 
+the security of the system.
+ 
+ 
