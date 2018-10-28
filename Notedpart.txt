@@ -1,0 +1,67 @@
+
+aws ec2 authorize-security-group-ingress --group-id sg-52a4432a --protocol udp --port 53
+aws ec2 authorize-security-group-ingress --group-id sg-52a4432a --protocol tcp --port 53
+aws ec2 authorize-security-group-ingress --group-id sg-3f47a347 --protocol udp --port 53
+aws ec2 authorize-security-group-ingress --group-id sg-52a4432a --protocol udp --port 53
+aws ec2 authorize-security-group-ingress --group-id sg-52a4432a --protocol udp --port 53
+aws ec2 authorize-security-group-egress --group-id sg-52a4432a --protocol udp --port 53
+aws ec2 authorize-security-group-egress --group-id sg-3f47a347 --protocol udp --port 53
+
+
+
+23:25:44.757454 IP 172.31.7.184.34354 > 98.139.180.149.http: Flags [S], seq 2051456194, win 29200, options [mss 1460,sackOK,TS val 871046765 ecr 0,nop,wscale 7], length 0
+23:25:44.774435 IP 98.139.180.149.http > 172.31.7.184.34354: Flags [S.], seq 2837256947, ack 2051456195, win 8192, options [mss 1460,nop,nop,sackOK,nop,wscale 8], length 0
+23:25:44.774461 IP 172.31.7.184.34354 > 98.139.180.149.http: Flags [.], ack 2837256948, win 229, length 0
+
+23:25:46.196822 IP 172.31.7.184.34354 > 98.139.180.149.http: Flags [P.], seq 2051456195:2051456211, ack 2837256948, win 229, length 16: HTTP: GET / HTTP/1.1
+23:25:46.213979 IP 98.139.180.149.http > 172.31.7.184.34354: Flags [.], ack 2051456211, win 58, length 0
+23:25:51.298538 IP 172.31.7.184.34354 > 98.139.180.149.http: Flags [P.], seq 2051456211:2051456232, ack 2837256948, win 229, length 21: HTTP
+23:25:51.315669 IP 98.139.180.149.http > 172.31.7.184.34354: Flags [.], ack 2051456232, win 58, length 0
+23:25:58.210217 IP 98.139.180.149.http > 172.31.7.184.34354: Flags [F.], seq 2837256948, ack 2051456232, win 58, length 0
+23:25:58.210375 IP 172.31.7.184.34354 > 98.139.180.149.http: Flags [F.], seq 2051456232, ack 2837256949, win 229, length 0
+23:25:58.227440 IP 98.139.180.149.http > 172.31.7.184.34354: Flags [.], ack 2051456233, win 58, length 0 
+
+
+It could be done in one terminal if we run the command tcpdump in background 
+tcpdump -Xvnw serverP1.pcap port not 22 & 
+then running telnet command
+finally, running fg (foreground) to bring a background process to the foreground and then 
+we kill tcpdump
+
+
+[root@ip-172-31-7-184 part2]# tcpdump -i any -Xvnw server.pcap  port 53 and not port 22
+tcpdump: listening on any, link-type LINUX_SLL (Linux cooked), capture size 262144 bytes
+72 packets captured
+77 packets received by filter
+0 packets dropped by kernel
+
+
+[root@ip-172-31-7-184 part2]# tcpdump -Xnvr server.pcap proto 17
+reading from file server.pcap, link-type LINUX_SLL (Linux cooked)
+22:56:40.453154 IP (tos 0x0, ttl 64, id 17244, offset 0, flags [DF], proto UDP (17), length 59)
+    172.31.7.184.42585 > 172.31.7.184.domain: 5174+ A? www.yahoo.com. (31)
+	0x0000:  4500 003b 435c 4000 4011 8fa7 ac1f 07b8  E..;C\@.@.......
+	0x0010:  ac1f 07b8 a659 0035 0027 67e7 1436 0100  .....Y.5.'g..6..
+	0x0020:  0001 0000 0000 0000 0377 7777 0579 6168  .........www.yah
+	0x0030:  6f6f 0363 6f6d 0000 0100 01              oo.com.....
+22:56:40.454282 IP (tos 0x0, ttl 64, id 19063, offset 0, flags [none], proto UDP (17), length 70)
+    172.31.7.184.37016 > 192.12.94.30.domain: 10272 [1au] A? www.yahoo.com. (42)
+	0x0000:  4500 0046 4a77 0000 4011 5e2e ac1f 07b8  E..FJw..@.^.....
+	0x0010:  c00c 5e1e 9098 0035 0032 d245 2820 0000  ..^....5.2.E(...
+	0x0020:  0001 0000 0000 0001 0377 7777 0579 6168  .........www.yah
+	0x0030:  6f6f 0363 6f6d 0000 0100 0100 0029 0200  oo.com.......)..
+	0x0040:  0000 8000 0000                           ......
+
+
+[root@ip-172-31-7-184 part2]# iptables -nvxL
+Chain INPUT (policy ACCEPT 8887 packets, 22344979 bytes)
+    pkts      bytes target     prot opt in     out     source               destination         
+       0        0 ACCEPT     tcp  --  *      *       172.31.0.0/20        0.0.0.0/0            tcp dpt:80
+      48     2874 ACCEPT     tcp  --  *      *       172.31.0.0/20        0.0.0.0/0            tcp dpt:53
+    5124   369866 ACCEPT     udp  --  *      *       172.31.0.0/20        0.0.0.0/0            udp dpt:53
+
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+    pkts      bytes target     prot opt in     out     source               destination         
+
+Chain OUTPUT (policy ACCEPT 7058 packets, 856133 bytes)
+    pkts      bytes target     prot opt in     out     source               destination         
