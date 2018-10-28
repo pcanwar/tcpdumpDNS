@@ -72,14 +72,13 @@ I tried some options of tcpdump.
 -n: when it display, it dose not convert addresses to name. -nn, it does not convert
 port to name.
 
-aalruwai@rainman:~/homework/aalruwai/part1/uba$ tcpdump -Xvr uba.pcap proto 1
+> tcpdump -Xvr uba.pcap proto 1
 to print the data in the file named uba.pcap and proto 1 filters it for ICMP and 17 for UDP
 
 
-aalruwai@rainman:~/homework/aalruwai/part1/uba$ grep UDP /etc/protocols
+> grep UDP /etc/protocols
 udp	17	UDP		# user datagram protocol
 udplite	136	UDPLite		# UDP-Lite [RFC3828]
-aalruwai@rainman:~/homework/aalruwai/part1/uba$ 
 
 
 Stevens.edu:
@@ -88,8 +87,6 @@ There was 14 hops and the packet travels from the source (NetBSD system) to the 
 of the command, and it shows it is an unreachable destination because the router’s firewall
 forwards the incoming traffic on some ports but it is blocked for incoming traffic if that 
 router is used as a destination. Very common blocking ports as ICMP and UDP due to security.
-
-
 
 
 from following output:
@@ -126,32 +123,26 @@ reading from file stevens.pcap, link-type EN10MB (Ethernet)
 	0x0030:  c608 829e 0014 b1e3                      ........
 
 
-ip-172-31-11-137# cat stevens.txt
+
 ip-172-31-11-137# traceroute www.stevens.edu
-traceroute: www.stevens.edu has multiple addresses; using 104.16.125.51
-traceroute to www.stevens.edu.cdn.cloudflare.net (104.16.125.51), 64 hops max, 40 byte packets
- 1  216.182.224.76 (216.182.224.76)  1.212 ms  1.087 ms  0.929 ms
- 2  100.64.8.55 (100.64.8.55)  1.495 ms
-    100.64.8.51 (100.64.8.51)  18.060 ms
-    100.64.8.63 (100.64.8.63)  1.368 ms
     
     
 In the examples
 
-Stevens.edu and marburg.de
+www.stevens.edu and www.marburg.de
 On Stevens: there was an IP address of router that is located 
 in Los Angeles before reached to stevens.edu. As I mentioned the network path depends on
 the owner of the company that provides the internet.
 On marburg: at the middel hop 15, there were asterisks and that could be normal. 
 However they were successful 
 
-Noted on du.edu, usyd.edu.au
+www.du.edu, www.usyd.edu.au
 The round trip times got higher to around 200 mis range at the middel hop. This could 
 be network level issue, there was a problem between two routes in the network, or 
 the traffic could be overcrowding.
 However, on usyd.edu.au, it reached the destination. 
 
-www.hku.hk, uba.ar, du.edu, and hawaii.edu
+www.hku.hk, www.uba.ar, www.du.edu, and www.hawaii.edu
 At the final router there were asterisks are because of a firewall blocking traceroute packets.
 Because I can reached the website through the browser. 
 
@@ -171,7 +162,6 @@ traffic travel through a global network from Europe to USA
 du.ac.in is not reachable using this website. 
 There is an issue when I trace uba.ar, I think because in the website there is buffering 
 the data in memory 
-------
 
 These tools are useful when I need to test a website that is unreachable. I can find out 
 where the connection fails. It is a good idea to save a traceroute and tcpdump file of 
