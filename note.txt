@@ -1,0 +1,19 @@
+
+ICMP4 has the type of 8 bit and code of 8 bit.
+The packet is being rejected by a firewall:
+I place full packets into a file named website.pcap
+The file named website.pcap has all packet headers of ICMP and UDP.
+When the packet was arrived at the destination, but there were one or two asterisks on
+router, it does not mean that the packet was lost. Most firewall block ping or traceroute packets, to prevent routers from being attacks.
+There are some reasons when it shows three asterisks at end of the
+traceroute:
+The firewall and other security device block and prevent my request to the destination
+through using traceroute because the destination can be reached using a different
+application such as using the browser.
+It could be a connection problem and the destination could not be reached.
+Surprise me: when the packet travels so far through a physical distance. The length of
+the longest possible path traveled between two point.
+These tools are useful when I need to test a website that is unreachable. I can find out where the connection fails.
+It is a good idea to save a traceroute and tcpdump file of my website during it is working because when it fails or is unreachable, I can compare these files.
+Even if the path passes different network but it would be similar.
+Also if there was timed out after the first line, I would need to connect the company that provides internet services or the network admin because there was a problem
