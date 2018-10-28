@@ -1,0 +1,14 @@
+Visual Trace Route is in the USA
+I can trace from my location (proxy trace) or their location (host trace).
+When there is an issue when I trace I think because it is buffering the data in memory 
+du.ac.in before reached the destination, it goes from my computer through many comcast's
+routers in several location in the USA, then travels to Switzerland then to England.
+It travels through different ISPs regional internet registries (RIR) 
+when I trace uba.ar it shows the domain is an invalid address because the top-level 
+domain "ar" could not recognize on Visual Trace Route website.
+
+traceroute is in Germany 
+It shows when someone, who is from Germany, wants to access stevens.edu, 
+First it goes to New York then Los Angeles before reached to the destination because the traffic travel through a global network from Europe to USA
+du.ac.in is not reachable using this website. 
+There is an issue when I trace uba.ar, I think because in the website there is buffering the data in memory 
