@@ -1,4 +1,6 @@
 
+some notes..
+
 ICMP4 has the type of 8 bit and code of 8 bit.
 The packet is being rejected by a firewall:
 I place full packets into a file named website.pcap
