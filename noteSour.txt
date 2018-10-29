@@ -12,3 +12,6 @@ It shows when someone, who is from Germany, wants to access stevens.edu,
 First it goes to New York then Los Angeles before reached to the destination because the traffic travel through a global network from Europe to USA
 du.ac.in is not reachable using this website. 
 There is an issue when I trace uba.ar, I think because in the website there is buffering the data in memory 
+
+
+traceroute is on AWS  
