@@ -41,7 +41,7 @@ protocol udp on port 53
 For ICMP I used -1 indicates all ICMP codes for all ICMP types and codes for the ICMP type.
 Using --cidr 172.31.0.0/20 to add the CIDR IP range.
 
-aalruwai@avalon:~/homework/aalruwai/aalruwai/part2$ aws ec2 describe-security-groups --group-name anwarGroup
+aalruwai@avalon:~/part2$ aws ec2 describe-security-groups --group-name anwarGroup
 SECURITYGROUPS	security group for development environment in EC	sg-52a4432a	anwarGroup	718080603727	vpc-f4aefa90
 IPPERMISSIONS	80	tcp	80
 IPRANGES	172.31.0.0/20
@@ -55,7 +55,6 @@ IPPERMISSIONS	-1	icmp	-1
 IPRANGES	172.31.0.0/20
 IPPERMISSIONSEGRESS	-1
 IPRANGES	0.0.0.0/0
-aalruwai@avalon:~/homework/aalruwai/aalruwai/part2$ 
 
 
 
