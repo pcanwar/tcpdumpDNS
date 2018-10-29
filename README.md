@@ -62,24 +62,25 @@ the network path. Tcpdump gives better detail and information of the issue such 
 the issue is a firewall issue or a connection issue. It shows what port is currently 
 being used. I can use a port to filter the traffic on tcpdump. 
 
-I used tcpdump to capture packets. Using it with traceroute, it shows and match the network
-path. Tcpdump gives better detail and information of the issue such as if the issue is a
-firewall issue. The connection is coming from the source IP address
-I tried some options of tcpdump.
+The connection is coming from the source IP address
+Some options of tcpdump.
 -v, -vv or -vvv shows more informations, and each -v shows more details of information
 -w: to write packet information to file or to standard output
 -X: show the hex and ASCII text
--n: when it display, it dose not convert addresses to name. -nn, it does not convert
+-n: when it display, it dose not convert addresses to name. 
+-nn, it does not convert
 port to name.
 
-> tcpdump -Xvr uba.pcap proto 1
-to print the data in the file named uba.pcap and proto 1 filters it for ICMP and 17 for UDP
+```
+
+> tcpdump -Xvr uba.pcap proto
+to print the data in the file named uba.pcap and proto 1 filters it for ICMP and port 17 for protocol UDP
 
 
 > grep UDP /etc/protocols
 udp	17	UDP		# user datagram protocol
 udplite	136	UDPLite		# UDP-Lite [RFC3828]
-
+```
 
 Stevens.edu:
 There was 14 hops and the packet travels from the source (NetBSD system) to the destination 
@@ -97,6 +98,7 @@ protocol and DNS name.
 The second hop, there were 3 different IP addresses and each IP address has its round 
 trip time. ICMP can tell us if there is an issue with the connection 
 
+``` 
 ip-172-31-11-137# tcpdump -Xr stevens.pcap proto \\icmp
 
 
@@ -120,13 +122,10 @@ reading from file stevens.pcap, link-type EN10MB (Ethernet)
 	0x0000:  4500 0038 3d2f 4000 fe01 1b76 6440 0837  E..8=/@....vd@.7
 	0x0010:  ac1f 0b89 0b00 fa60 0000 0000 4500 0028  .......`....E..(
 	0x0020:  c60c 0000 0111 56cd ac1f 0b89 6810 7d33  ......V.....h.}3
-	0x0030:  c608 829e 0014 b1e3                      ........
+	0x0030:  c608 829e 0014 b1e3                      ........ 
+```
 
-
-
-Example, traceroute domainName
-    
-    
+Example, traceroute domainName    
 In the examples
 
 www.stevens.edu and www.marburg.de
