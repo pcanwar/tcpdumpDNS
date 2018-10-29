@@ -95,11 +95,11 @@ On tracroute there is three round trip times in milliseconds. The first line sho
 the first hop (216.182.224.76) has tested 3 times. On tcpdump shows more information such 
 protocol and DNS name. 
 The second hop, there were 3 different IP addresses and each IP address has its round 
-trip time. 
-
-icmp can tell us if there is an issue with the connection 
+trip time. ICMP can tell us if there is an issue with the connection 
 
 ip-172-31-11-137# tcpdump -Xr stevens.pcap proto \\icmp
+
+
 reading from file stevens.pcap, link-type EN10MB (Ethernet)
 02:24:39.108512 IP 216.182.224.76 > ip-172-31-11-137.ec2.internal: ICMP time exceeded in-transit, length 36
 	0x0000:  4500 0038 20a1 4000 ff01 ea77 d8b6 e04c  E..8..@....w...L
@@ -124,7 +124,7 @@ reading from file stevens.pcap, link-type EN10MB (Ethernet)
 
 
 
-ip-172-31-11-137# traceroute www.stevens.edu
+Example, traceroute domainName
     
     
 In the examples
@@ -146,7 +146,7 @@ www.hku.hk, www.uba.ar, www.du.edu, and www.hawaii.edu
 At the final router there were asterisks are because of a firewall blocking traceroute packets.
 Because I can reached the website through the browser. 
 
-Visual Trace Route is in the USA
+Visual Trace Route is in the USA:
 I can trace from my location (proxy trace) or their location (host trace).
 du.ac.in before reached the destination, it goes from my computer through many comcast's
 routers in several location in the USA, then travels to Switzerland then to England.
@@ -155,7 +155,7 @@ when I trace uba.ar it shows the domain is an invalid address because the top-le
 domain "ar" could not recognize on Visual Trace Route website.
 
 
-traceroute is in Germany 
+traceroute is in Germany:
 It shows me when someone, who is from Germany, wants to access stevens.edu, 
 First it goes to New York then Los Angeles before reached to the destination because the 
 traffic travel through a global network from Europe to USA
